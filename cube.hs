@@ -20,6 +20,7 @@ add_corner :: Corner -> Cube -> Cube
 check_cube :: Cube -> Bool
 solve_outer_cube :: Cube -> Int -> String 
 solve_cube :: Cube -> Int -> String
+is_solved :: Cube -> Bool
 --move :: Cube -> String -> Cube
 
 data Cube = Cube [Corner]
@@ -41,6 +42,8 @@ solve_outer_cube cube x | x == 14 = ""
                                          soulve_outer_cube cube (x + 1)
 
 solve_cube cube x | x > 14 = "" --Solve the inside of the cube. 
+
+is_solved (Cube corners) = 
 
     
 apply_move (Cube corners) m = 
