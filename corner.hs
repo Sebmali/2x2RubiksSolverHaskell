@@ -12,16 +12,15 @@ module Corner
 where
 import Data.Tuple (swap)
 
-new_corner :: String -> Corner
+new_corner :: [String] -> Corner
 is_valid :: Corner -> Bool
 swap1 :: Int -> Int -> Corner -> Corner
 colors:: String
 
 data Corner = Corner [Char]
     deriving (Show)
-
-
-new_corner [a, b, c] = Corner [a, b, c]
+  
+new_corner (x:y:z:xs) = Corner [x !! 0, y !! 0, z !! 0]
 
 colors = "RGBYOW"
 
