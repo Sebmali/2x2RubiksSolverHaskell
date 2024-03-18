@@ -1,6 +1,10 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
+{-# HLINT ignore "Eta reduce" #-}
 import Corner 
 import Cube
 import System.IO
+import Data.Type.Equality (apply)
 
 main :: IO ()
 main = do 
@@ -21,6 +25,7 @@ get_file = do
     print corners 
     let resultCube = create_corners corners empty_cube
     print resultCube
+    print (apply_move resultCube "BHL")
     hClose fileHandle
     if check_cube resultCube then return True
     else do putStr "Invalid Cube Configuration. Please try again.\n"
@@ -49,12 +54,15 @@ get_input i  xs | i == 8 = return xs
                     let newXs = xs ++ colors
                     print newXs
                     get_input (i + 1) newXs
-   
+
 create_corners :: [String] -> Cube -> Cube
-create_corners [] cube = cube   
-create_corners (x:xs) cube = do 
+create_corners corner_string cube = create_corners_helper (reverse corner_string) cube
+   
+create_corners_helper :: [String] -> Cube -> Cube
+create_corners_helper [] cube = cube   
+create_corners_helper (x:xs) cube = do 
     let colors = words x 
     let corner = new_corner colors 
-    if is_valid corner then create_corners xs (add_corner corner cube)
+    if is_valid corner then create_corners_helper xs (add_corner corner cube)
     else error "Invalid Cube Configuration. Please try again.\n"
                   
