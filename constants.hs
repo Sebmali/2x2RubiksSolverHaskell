@@ -2,11 +2,6 @@
 {-# HLINT ignore "Use camelCase" #-}
 module Constants where 
 
-poss_corners :: [String]
-poss_corners = ["Front-Right-Top", "Front-Left-Top", "Back-Left-Top", "Back-Right-Top", 
-               "Front-Right-Bottom", "Front-Left-Bottom", "Back-Left-Bottom", "Back-Right-Bottom"]
-poss_colors :: [Char]
-poss_colors = ['W', 'G', 'R', 'B', 'O', 'Y']
 rvu, rvd, lvu, lvd, thr, thl, bhr, bhl, fc, fcc, bc, bcc :: String
 rvu = "right_vertical_up"
 rvd = "right_vertical_down"
@@ -78,3 +73,4 @@ initial_possibilities = [['W','O','B'], ['W','B','O'], ['O','W','B'], ['O','B','
                          ['Y','O','G'], ['Y','G','O'], ['O','Y','G'], ['O','G','Y'], ['G','Y','O'], ['G','O','Y'],
                          ['Y','R','G'], ['Y','G','R'], ['R','Y','G'], ['R','G','Y'], ['G','Y','R'], ['G','R','Y'],
                          ['Y','R','B'], ['Y','B','R'], ['R','Y','B'], ['R','B','Y'], ['B','Y','R'], ['B','R','Y']]
+
