@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -Wall #-}
 {-# HLINT ignore "Use camelCase" #-}
 {-# HLINT ignore "Use list literal" #-}
 
@@ -6,67 +7,92 @@ module Cube
 (
     Cube,
     empty_cube,
-    check_cube,
+    check_initial_cube,
     add_corner,
     solve_outer_cube,
+    get_corner,
     apply_move
 ) where
 
 import Corner
-import Corner (Corner, swap1)
 import Constants
+import Prelude 
+import Debug.Trace
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
-check_cube :: Cube -> Bool
-solve_outer_cube :: Cube -> Int -> String 
-solve_cube :: Cube -> Int -> String
-apply_move :: Cube -> String -> Cube
+check_initial_cube :: Cube -> Bool
+get_corner :: Cube -> Int -> Corner
 is_solved :: Cube -> Bool
-
+is_side_solved :: Cube -> [Int] -> Int -> Bool
+solve_outer_cube :: Cube -> [String]
+solve_cube :: Cube -> Int -> Int -> String -> [String] -> (Bool, [String])
+apply_move :: Cube -> String -> Cube
 
 data Cube = Cube [Corner]
     deriving (Show)
 
 empty_cube = Cube []
+
 add_corner corner (Cube corners) = Cube (corner:corners)
 
-check_cube (Cube corners) = length corners == 8
--- make move take a string to rep the specific move, based on the move(maybe use case) we send the specific corners
--- to swap1
+check_initial_cube (Cube corners) = length corners == 8
+
+get_corner (Cube corners) x = corners !! x
+
+is_solved cube = if is_side_solved cube front c1 && is_side_solved cube back c1 && 
+                    is_side_solved cube top c2 && is_side_solved cube bottom c2 && 
+                    is_side_solved cube right c3 && is_side_solved cube left c3 then True else False
+
+is_side_solved (Cube corners) indeces color_index = 
+    let cube_corners = [get_corner (Cube corners) x | x <- indeces] 
+        cube_colors = [get_colors corner !! color_index | corner <- cube_corners] 
+        in all (== head cube_colors) (tail cube_colors)
+
+solve_outer_cube cube = solveAtDepth 1 where
+    solveAtDepth :: Int -> [String]
+    solveAtDepth depth
+      | depth > max_depth_limit = []
+      | otherwise =
+          case trace ("Depth: " ++ show depth) $ solve_cube cube 0 depth "" [] of
+            (True, path) -> path
+            (False, _) -> solveAtDepth (depth + 1)
+
+solve_cube cube curr_depth max_depth lastMove path
+    | is_solved cube = (True, path)
+    | curr_depth >= max_depth = (False, [])
+    | otherwise = try_moves cube curr_depth max_depth lastMove path all_moves
+        
+try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> (Bool, [String])
+try_moves _ _ _ _ _ [] = (False, []) -- No more moves to try
+try_moves cube curr_depth max_depth last_move path (curr_move:moves) = do 
+    let new_cube = apply_move cube curr_move
+    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move])
+    case result of
+        (True, _) -> result
+        (False, _) -> try_moves cube curr_depth max_depth last_move path moves
 
 move :: Cube -> Int -> Int -> [Int] -> Cube
 move (Cube corners) a b indices_to_swap =
     let temp = swap1 a b (corners !! (indices_to_swap !! 0))
-        replace idx new_corner cube_state = take idx cube_state ++ [new_corner] ++ drop (idx + 1) cube_state
+        replace idx new_corn cube_state = take idx cube_state ++ [new_corn] ++ drop (idx + 1) cube_state
         cube1 = replace (indices_to_swap !! 0) (swap1 a b (corners !! (indices_to_swap !! 1))) corners
         cube2 = replace (indices_to_swap !! 1) (swap1 a b (cube1 !! (indices_to_swap !! 2))) cube1
         cube3 = replace (indices_to_swap !! 2) (swap1 a b (cube2 !! (indices_to_swap !! 3))) cube2
         final_cube = replace (indices_to_swap !! 3) temp cube3
     in Cube final_cube
 
-
-solve_outer_cube cube x | x == 14 = ""
-                        | otherwise = do solve_cube cube x
-                                         solve_outer_cube cube (x + 1)
-
-solve_cube cube x | x > 14 = "" --Solve the inside of the cube. 
-
-is_solved (Cube corners) = 
-
-    
-apply_move (Cube corners) m = 
-    case m of
-        "RVU" -> move (Cube corners) 0 1 rvu_ind
-        "RVD" -> move (Cube corners) 0 1 rvd_ind
-        "LVU" -> move (Cube corners) 0 1 lvu_ind
-        "LVD" -> move (Cube corners) 0 1 lvd_ind
-        "THR" -> move (Cube corners) 0 2 thr_ind
-        "THL" -> move (Cube corners) 0 2 thl_ind
-        "BHR" -> move (Cube corners) 0 2 bhr_ind
-        "BHL" -> move (Cube corners) 0 2 bhl_ind
-        "FC" -> move (Cube corners) 1 2 fc_ind
-        "FCC" -> move (Cube corners) 1 2 fcc_ind
-        "BC" -> move (Cube corners) 1 2 bc_ind
-        "BCC" -> move (Cube corners) 1 2 bcc_ind
-        _ -> Cube corners
+apply_move (Cube corners) m 
+    | m == rvu = move (Cube corners) c1 c2 rvu_ind
+    | m == rvd = move (Cube corners) c1 c2 rvd_ind
+    | m == lvu = move (Cube corners) c1 c2 lvu_ind
+    | m == lvd = move (Cube corners) c1 c2 lvd_ind
+    | m == thr = move (Cube corners) c1 c3 thr_ind
+    | m == thl = move (Cube corners) c1 c3 thl_ind
+    | m == bhr = move (Cube corners) c1 c3 bhr_ind
+    | m == bhl = move (Cube corners) c1 c3 bhl_ind
+    | m == fc = move (Cube corners) c2 c3 fc_ind
+    | m == fcc = move (Cube corners) c2 c3 fcc_ind
+    | m == bc = move (Cube corners) c2 c3 bc_ind
+    | m == bcc = move (Cube corners) c2 c3 bcc_ind
+    | otherwise = Cube corners
