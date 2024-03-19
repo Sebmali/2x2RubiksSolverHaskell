@@ -10,7 +10,8 @@ module Cube
     check_initial_cube,
     add_corner,
     solve_outer_cube,
-    get_corner
+    get_corner,
+    cube_state_to_key
 ) where
 
 import Corner
@@ -111,3 +112,28 @@ prune_moves m
     | m == bc = bc_moves
     | m == bcc = bcc_moves
     | otherwise = all_moves
+
+cube_state_to_key :: Cube -> String
+cube_state_to_key (Cube corners) = 
+    let key_dict = []
+        position = 1
+        key = ""
+        cube_colors = [get_colors corner | corner <- corners] 
+        color_array = concat cube_colors
+        in corner_dissection key_dict color_array key position
+
+corner_dissection :: [(Char, Int)] -> [Char] -> String -> Int -> String
+corner_dissection _ [] key _ = key 
+corner_dissection [] (color:xs) key position = 
+    let new_key_dict = [(color, position)]
+        new_key = key ++ show position
+    in corner_dissection new_key_dict xs new_key (position + 1)
+corner_dissection key_dict (color:xs) key position = 
+    case lookup color key_dict of
+        Just pos ->
+            let new_key = key ++ show pos
+            in corner_dissection key_dict xs new_key position
+        Nothing -> 
+            let new_key_dict = key_dict ++ [(color, position)]
+                new_key = key ++ show position
+            in corner_dissection new_key_dict xs new_key (position + 1)
