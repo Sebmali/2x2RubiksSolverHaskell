@@ -1,7 +1,12 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
 module Constants where 
 
+max_depth_limit :: Int 
+max_depth_limit = 14
+poss_corners :: [String]
+poss_corners = ["Front-Right-Top", "Front-Left-Top", "Back-Left-Top", "Back-Right-Top", 
+               "Front-Right-Bottom", "Front-Left-Bottom", "Back-Left-Bottom", "Back-Right-Bottom"]
+poss_colors :: [Char]
+poss_colors = ['W', 'G', 'R', 'B', 'O', 'Y']
 rvu, rvd, lvu, lvd, thr, thl, bhr, bhl, fc, fcc, bc, bcc :: String
 rvu = "right_vertical_up"
 rvd = "right_vertical_down"

@@ -25,9 +25,15 @@ get_file = do
     print corners 
     let resultCube = create_corners corners empty_cube
     print resultCube
-    print (apply_move resultCube "BHL")
+    print "Done!"
     hClose fileHandle
-    if check_cube resultCube then return True
+    if check_initial_cube resultCube then 
+        case solve_outer_cube resultCube of 
+            [] -> do putStr "No solution found.\n"
+                     return False
+            path -> do putStr "Solution found: "
+                       print path
+                       return True
     else do putStr "Invalid Cube Configuration. Please try again.\n"
             return False
 
@@ -41,7 +47,7 @@ get_corners = do
     inputs <- get_input 0 []  
     let resultCube = create_corners inputs empty_cube
     print resultCube
-    if check_cube resultCube then return True 
+    if check_initial_cube resultCube then return True 
     else do putStr "Invalid Cube Configuration. Please try again.\n"
             return False 
 
@@ -50,19 +56,18 @@ get_input i  xs | i == 8 = return xs
                 | otherwise = do 
                     putStr "Enter the colors of the corner: "
                     input <- getLine
-                    let colors = lines input
-                    let newXs = xs ++ colors
+                    --let colors = lines input
+                    let newXs = xs ++ [colors]
                     print newXs
                     get_input (i + 1) newXs
 
 create_corners :: [String] -> Cube -> Cube
 create_corners corner_string cube = create_corners_helper (reverse corner_string) cube
-   
+
 create_corners_helper :: [String] -> Cube -> Cube
-create_corners_helper [] cube = cube   
+create_corners_helper [] cube = cube
 create_corners_helper (x:xs) cube = do 
     let colors = words x 
     let corner = new_corner colors 
     if is_valid corner then create_corners_helper xs (add_corner corner cube)
     else error "Invalid Cube Configuration. Please try again.\n"
-                  
