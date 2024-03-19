@@ -21,6 +21,10 @@ fcc = "front_counter_clockwise"
 bc = "back_clockwise"
 bcc = "back_counter_clockwise"
 
+solved_cube :: [String]
+solved_cube = ["W O B", "W B G", "O W G", "O W B", "W Y B", 
+                "W Y G", "O Y G", "O Y B"]
+
 -- All possible moves
 all_moves, rvu_moves, rvd_moves, lvu_moves, lvd_moves, thr_moves, thl_moves :: [String]
 bhr_moves, bhl_moves, fc_moves, fcc_moves, bc_moves, bcc_moves :: [String]

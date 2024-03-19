@@ -5,6 +5,7 @@ import Corner
 import Cube
 import System.IO
 import Data.Type.Equality (apply)
+import Constants
 
 main :: IO ()
 main = do 
@@ -24,8 +25,11 @@ get_file = do
     let corners = lines contents
     print corners 
     let resultCube = create_corners corners empty_cube
+    let finalCube = create_corners solved_cube empty_cube -- for bidirectional search
     print resultCube
-    print "Done!"
+    print finalCube -- for bidirectional search
+    let cube_key = cube_state_to_key resultCube
+    print cube_key
     hClose fileHandle
     if check_initial_cube resultCube then 
         case solve_outer_cube resultCube of 
