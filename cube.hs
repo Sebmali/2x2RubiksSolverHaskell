@@ -10,8 +10,7 @@ module Cube
     check_initial_cube,
     add_corner,
     solve_outer_cube,
-    get_corner,
-    apply_move
+    get_corner
 ) where
 
 import Corner
@@ -27,7 +26,10 @@ is_solved :: Cube -> Bool
 is_side_solved :: Cube -> [Int] -> Int -> Bool
 solve_outer_cube :: Cube -> [String]
 solve_cube :: Cube -> Int -> Int -> String -> [String] -> (Bool, [String])
+try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> (Bool, [String])
+move :: Cube -> Int -> Int -> [Int] -> Cube
 apply_move :: Cube -> String -> Cube
+prune_moves :: String -> [String]
 
 data Cube = Cube [Corner]
     deriving (Show)
@@ -61,9 +63,8 @@ solve_outer_cube cube = solveAtDepth 1 where
 solve_cube cube curr_depth max_depth lastMove path
     | is_solved cube = (True, path)
     | curr_depth >= max_depth = (False, [])
-    | otherwise = try_moves cube curr_depth max_depth lastMove path all_moves
+    | otherwise = try_moves cube curr_depth max_depth lastMove path (prune_moves lastMove)
         
-try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> (Bool, [String])
 try_moves _ _ _ _ _ [] = (False, []) -- No more moves to try
 try_moves cube curr_depth max_depth last_move path (curr_move:moves) = do 
     let new_cube = apply_move cube curr_move
@@ -72,7 +73,6 @@ try_moves cube curr_depth max_depth last_move path (curr_move:moves) = do
         (True, _) -> result
         (False, _) -> try_moves cube curr_depth max_depth last_move path moves
 
-move :: Cube -> Int -> Int -> [Int] -> Cube
 move (Cube corners) a b indices_to_swap =
     let temp = swap1 a b (corners !! (indices_to_swap !! 0))
         replace idx new_corn cube_state = take idx cube_state ++ [new_corn] ++ drop (idx + 1) cube_state
@@ -96,3 +96,18 @@ apply_move (Cube corners) m
     | m == bc = move (Cube corners) c2 c3 bc_ind
     | m == bcc = move (Cube corners) c2 c3 bcc_ind
     | otherwise = Cube corners
+
+prune_moves m 
+    | m == rvu = rvu_moves
+    | m == rvd = rvd_moves
+    | m == lvu = lvu_moves
+    | m == lvd = lvd_moves
+    | m == thr = thr_moves
+    | m == thl = thl_moves
+    | m == bhr = bhr_moves
+    | m == bhl = bhl_moves
+    | m == fc = fc_moves
+    | m == fcc = fcc_moves
+    | m == bc = bc_moves
+    | m == bcc = bcc_moves
+    | otherwise = all_moves
