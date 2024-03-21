@@ -18,6 +18,9 @@ import Corner
 import Constants
 import Prelude 
 import Debug.Trace
+import qualified Data.Set as Set 
+
+type Result = (Bool, [String], Set.Set (String, Int))
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
@@ -26,8 +29,9 @@ get_corner :: Cube -> Int -> Corner
 is_solved :: Cube -> Bool
 is_side_solved :: Cube -> [Int] -> Int -> Bool
 solve_outer_cube :: Cube -> [String]
-solve_cube :: Cube -> Int -> Int -> String -> [String] -> (Bool, [String])
-try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> (Bool, [String])
+solve_cube :: Cube -> Int -> Int -> String -> [String] -> Set.Set (String, Int) -> Result
+try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> Set.Set (String, Int) -> Result
+
 move :: Cube -> Int -> Int -> [Int] -> Cube
 apply_move :: Cube -> String -> Cube
 prune_moves :: String -> [String]
@@ -52,27 +56,29 @@ is_side_solved (Cube corners) indeces color_index =
         cube_colors = [get_colors corner !! color_index | corner <- cube_corners] 
         in all (== head cube_colors) (tail cube_colors)
 
-solve_outer_cube cube = solveAtDepth 1 where
-    solveAtDepth :: Int -> [String]
-    solveAtDepth depth
-      | depth > max_depth_limit = []
-      | otherwise =
-          case trace ("Depth: " ++ show depth) $ solve_cube cube 0 depth "" [] of
-            (True, path) -> path
-            (False, _) -> solveAtDepth (depth + 1)
+solve_outer_cube cube = solve_at_depth 1 where 
+    solve_at_depth :: Int -> [String]
+    solve_at_depth depth 
+        | depth > max_depth_limit = []
+        | otherwise = 
+            case trace ("Depth: " ++ show depth) $ solve_cube cube 0 depth "" [] Set.empty of 
+                (True, path, _) -> path
+                (False, _, _) -> solve_at_depth (depth + 1)
 
-solve_cube cube curr_depth max_depth lastMove path
-    | is_solved cube = (True, path)
-    | curr_depth >= max_depth = (False, [])
-    | otherwise = try_moves cube curr_depth max_depth lastMove path (prune_moves lastMove)
-        
-try_moves _ _ _ _ _ [] = (False, []) -- No more moves to try
-try_moves cube curr_depth max_depth last_move path (curr_move:moves) = do 
-    let new_cube = apply_move cube curr_move
-    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move])
-    case result of
-        (True, _) -> result
-        (False, _) -> try_moves cube curr_depth max_depth last_move path moves
+solve_cube cube curr_depth max_depth last_move path memo
+    | Set.member (cube_key, curr_depth) memo = (False, [], memo) 
+    | is_solved cube = (True, path, memo)
+    | curr_depth >= max_depth = (False, [], memo)
+    | otherwise =  try_moves cube curr_depth max_depth last_move path (prune_moves last_move) (Set.insert (cube_key, curr_depth) memo)
+    where cube_key = cube_state_to_key cube
+
+try_moves _ _ _ _ _ [] memo = (False, [], memo)
+try_moves cube curr_depth max_depth last_move path (curr_move:moves) memo = do 
+    let new_cube = apply_move cube curr_move 
+    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move]) memo 
+    case result of 
+        (True, _, _) -> result 
+        (False, _, new_memo) -> try_moves cube curr_depth max_depth last_move path moves new_memo 
 
 move (Cube corners) a b indices_to_swap =
     let temp = swap1 a b (corners !! (indices_to_swap !! 0))
