@@ -5,14 +5,11 @@ import Corner
 import Cube
 import System.IO
 import Data.Type.Equality (apply)
-<<<<<<< Updated upstream
-=======
 import Constants
 import qualified Data.Set as Set 
 import Debug.Trace
 import System.CPUTime
 import Text.Printf
->>>>>>> Stashed changes
 
 main :: IO ()
 main = do 
@@ -33,11 +30,7 @@ get_file = do
     print corners 
     let resultCube = create_corners corners empty_cube
     print resultCube
-<<<<<<< Updated upstream
-    print "Done!"
-=======
     print finalCube -- for bidirectional search
->>>>>>> Stashed changes
     hClose fileHandle
     start <- getCPUTime
     if check_initial_cube resultCube then 
