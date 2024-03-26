@@ -29,6 +29,7 @@ get_file = do
     let corners = lines contents
     print corners 
     let resultCube = create_corners corners empty_cube
+    let finalCube = create_corners solved_cube empty_cube -- for bidirectional search
     print resultCube
     print finalCube -- for bidirectional search
     hClose fileHandle

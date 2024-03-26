@@ -10,7 +10,8 @@ module Cube
     check_initial_cube,
     add_corner,
     solve_outer_cube,
-    get_corner
+    get_corner,
+    cube_state_to_key
 ) where
 
 import Corner
@@ -21,6 +22,7 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 
 type Result = (Bool, [String], Map.Map String Int, String)
+
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
