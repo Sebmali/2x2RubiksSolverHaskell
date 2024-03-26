@@ -19,8 +19,10 @@ import Constants
 import Prelude 
 import Debug.Trace
 import qualified Data.Set as Set 
+import qualified Data.Map as Map
 
-type Result = (Bool, [String], Set.Set (String, Int))
+type Result = (Bool, [String], Map.Map String Int, String)
+
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
@@ -28,13 +30,11 @@ check_initial_cube :: Cube -> Bool
 get_corner :: Cube -> Int -> Corner
 is_solved :: Cube -> Bool
 is_side_solved :: Cube -> [Int] -> Int -> Bool
-solve_outer_cube :: Cube -> [String]
-solve_cube :: Cube -> Int -> Int -> String -> [String] -> Set.Set (String, Int) -> Result
-try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> Set.Set (String, Int) -> Result
-
 move :: Cube -> Int -> Int -> [Int] -> Cube
 apply_move :: Cube -> String -> Cube
 prune_moves :: String -> [String]
+convert_moves :: [String] -> [String]
+convert_move :: String -> String
 
 data Cube = Cube [Corner]
     deriving (Show)
@@ -47,38 +47,79 @@ check_initial_cube (Cube corners) = length corners == 8
 
 get_corner (Cube corners) x = corners !! x
 
-is_solved cube = if is_side_solved cube front c1 && is_side_solved cube back c1 && 
-                    is_side_solved cube top c2 && is_side_solved cube bottom c2 && 
-                    is_side_solved cube right c3 && is_side_solved cube left c3 then True else False
+is_solved cube = is_side_solved cube front c1 && is_side_solved cube back c1 && 
+                is_side_solved cube top c2 && is_side_solved cube bottom c2 && 
+                is_side_solved cube right c3 && is_side_solved cube left c3
 
-is_side_solved (Cube corners) indeces color_index = 
-    let cube_corners = [get_corner (Cube corners) x | x <- indeces] 
-        cube_colors = [get_colors corner !! color_index | corner <- cube_corners] 
-        in all (== head cube_colors) (tail cube_colors)
+is_side_solved (Cube corners) indices color_index = 
+    let cube_colors = map (\index -> (get_colors (get_corner (Cube corners) index)) !! color_index) indices
+    in all (== head cube_colors) cube_colors
 
-solve_outer_cube cube = solve_at_depth 1 where 
+solve_outer_cube :: Cube -> Cube -> [String]
+solve_outer_cube cube final_cube = solve_at_depth 1 where 
     solve_at_depth :: Int -> [String]
     solve_at_depth depth 
         | depth > max_depth_limit = []
         | otherwise = 
-            case trace ("Depth: " ++ show depth) $ solve_cube cube 0 depth "" [] Set.empty of 
-                (True, path, _) -> path
-                (False, _, _) -> solve_at_depth (depth + 1)
+            case trace ("Depth Cube: " ++ show depth) $ solve_cube cube 0 depth "" [] Map.empty of 
+                (True, path, _, _) -> path
+                (False, _, memo, _) -> 
+                    case trace (show depth) $ mess_cube final_cube 0 depth "" [] memo of
+                        (True, path, _, key) -> 
+                            case trace ("Connecting!: " ++ show key) $ find_connecting_path cube 0 depth "" key [] memo of
+                                (True, second_path, _, _) -> trace ("Connected.\n" ++ "Second_path: " ++ show second_path ++ "First_path: " ++ show path) $ second_path ++ (convert_moves (reverse path))
+                                (False, _, _, _) -> trace ("Not connected") $ solve_at_depth (depth + 1)
+                        (False, _, _, _) -> solve_at_depth (depth + 1)
 
-solve_cube cube curr_depth max_depth last_move path memo
-    | Set.member (cube_key, curr_depth) memo = (False, [], memo) 
-    | is_solved cube = (True, path, memo)
-    | curr_depth >= max_depth = (False, [], memo)
-    | otherwise =  try_moves cube curr_depth max_depth last_move path (prune_moves last_move) (Set.insert (cube_key, curr_depth) memo)
+solve_cube :: Cube -> Int -> Int -> String -> [String] -> Map.Map String Int -> Result
+solve_cube cube curr_depth max_depth last_move path memo 
+    | Map.lookup cube_key memo == Just curr_depth = (False, [], memo, "")
+    | is_solved cube = (True, path, new_memo, cube_key)
+    | curr_depth >= max_depth = (False, [], memo, "")
+    | otherwise = try_moves cube curr_depth max_depth last_move cube_key path (prune_moves last_move) new_memo
+    where cube_key = cube_state_to_key cube
+          new_memo = Map.insert cube_key curr_depth memo
+        
+try_moves :: Cube -> Int -> Int -> String -> String -> [String] -> [String] -> Map.Map String Int -> Result
+try_moves _ _ _ _ _ _ [] memo = (False, [], memo, "")
+try_moves cube curr_depth max_depth last_move cube_key path (curr_move:moves) memo = do
+    let new_cube = apply_move cube curr_move
+    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move]) memo
+    case result of 
+        (True, _, _, _) -> result
+        (False, _, next_memo, _) -> try_moves cube curr_depth max_depth last_move cube_key path moves next_memo
+
+mess_cube :: Cube -> Int -> Int -> String -> [String] -> Map.Map String Int -> Result
+mess_cube cube curr_depth max_depth last_move path memo
+    | Map.member cube_key memo = trace ("Cube Key: " ++ show cube_key) $ (True, path, memo, cube_key)
+    | curr_depth >= max_depth = (False, [], memo, "")
+    | otherwise = try_moves_2 cube curr_depth max_depth last_move cube_key path (prune_moves last_move) memo
     where cube_key = cube_state_to_key cube
 
-try_moves _ _ _ _ _ [] memo = (False, [], memo)
-try_moves cube curr_depth max_depth last_move path (curr_move:moves) memo = do 
-    let new_cube = apply_move cube curr_move 
-    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move]) memo 
+try_moves_2 :: Cube -> Int -> Int -> String -> String -> [String] -> [String] -> Map.Map String Int -> Result
+try_moves_2 _ _ _ _ _ _ [] memo = (False, [], memo, "")
+try_moves_2 cube curr_depth max_depth last_move cube_key path (curr_move:moves) memo = do
+    let new_cube = apply_move cube curr_move
+    let result = mess_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move]) memo
     case result of 
-        (True, _, _) -> result 
-        (False, _, new_memo) -> try_moves cube curr_depth max_depth last_move path moves new_memo 
+        (True, _, _, _) -> result
+        (False, _, new_memo, _) -> try_moves_2 cube curr_depth max_depth last_move cube_key path moves new_memo
+
+find_connecting_path :: Cube -> Int -> Int -> String -> String -> [String] -> Map.Map String Int -> Result
+find_connecting_path cube curr_depth max_depth last_move key path memo
+    | current_key == key = (True, path, memo, current_key)
+    | curr_depth >= max_depth = (False, [], memo, "")
+    | otherwise = try_moves_3 cube curr_depth max_depth last_move current_key key path (prune_moves last_move) memo
+    where current_key = cube_state_to_key cube
+
+try_moves_3 :: Cube -> Int -> Int -> String -> String -> String -> [String] -> [String] -> Map.Map String Int -> Result
+try_moves_3 _ _ _ _ _ _ _ [] memo = (False, [], memo, "")
+try_moves_3 cube curr_depth max_depth last_move current_key key path (curr_move:moves) memo = do
+    let new_cube = apply_move cube curr_move
+    let result = find_connecting_path new_cube (curr_depth + 1) max_depth curr_move key (path ++ [curr_move]) memo
+    case result of 
+        (True, _, _, _) -> result
+        (False, _, new_memo, _) -> try_moves_3 cube curr_depth max_depth last_move current_key key path moves new_memo
 
 move (Cube corners) a b indices_to_swap =
     let temp = swap1 a b (corners !! (indices_to_swap !! 0))
@@ -119,27 +160,31 @@ prune_moves m
     | m == bcc = bcc_moves
     | otherwise = all_moves
 
+convert_moves [] = []
+convert_moves (m:ms) = convert_move m : convert_moves ms
+
+convert_move m 
+    | m == rvu = rvd
+    | m == rvd = rvu
+    | m == lvu = lvd
+    | m == lvd = lvu
+    | m == thr = thl
+    | m == thl = thr
+    | m == bhr = bhl
+    | m == bhl = bhr
+    | m == fc = fcc
+    | m == fcc = fc
+    | m == bc = bcc
+    | m == bcc = bc
+    | otherwise = m
+
 cube_state_to_key :: Cube -> String
 cube_state_to_key (Cube corners) = 
-    let key_dict = []
-        position = 1
-        key = ""
-        cube_colors = [get_colors corner | corner <- corners] 
-        color_array = concat cube_colors
-        in corner_dissection key_dict color_array key position
+    corner_dissection Map.empty 1 "" (get_all_colors corners)
 
-corner_dissection :: [(Char, Int)] -> [Char] -> String -> Int -> String
-corner_dissection _ [] key _ = key 
-corner_dissection [] (color:xs) key position = 
-    let new_key_dict = [(color, position)]
-        new_key = key ++ show position
-    in corner_dissection new_key_dict xs new_key (position + 1)
-corner_dissection key_dict (color:xs) key position = 
-    case lookup color key_dict of
-        Just pos ->
-            let new_key = key ++ show pos
-            in corner_dissection key_dict xs new_key position
-        Nothing -> 
-            let new_key_dict = key_dict ++ [(color, position)]
-                new_key = key ++ show position
-            in corner_dissection new_key_dict xs new_key (position + 1)
+corner_dissection :: Map.Map Char Int -> Int -> String -> [Char] -> String
+corner_dissection _ _ key [] = key
+corner_dissection key_dict position key (c:cs) = 
+    case Map.lookup c key_dict of 
+        Just value -> corner_dissection key_dict position (show value ++ key) cs
+        Nothing -> corner_dissection (Map.insert c position key_dict) (position + 1) (show position ++ key) cs

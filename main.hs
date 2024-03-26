@@ -6,6 +6,10 @@ import Cube
 import System.IO
 import Data.Type.Equality (apply)
 import Constants
+import qualified Data.Set as Set 
+import Debug.Trace
+import System.CPUTime
+import Text.Printf
 
 main :: IO ()
 main = do 
@@ -28,15 +32,17 @@ get_file = do
     let finalCube = create_corners solved_cube empty_cube -- for bidirectional search
     print resultCube
     print finalCube -- for bidirectional search
-    let cube_key = cube_state_to_key resultCube
-    print cube_key
     hClose fileHandle
+    start <- getCPUTime
     if check_initial_cube resultCube then 
-        case solve_outer_cube resultCube of 
+        case solve_outer_cube resultCube finalCube of 
             [] -> do putStr "No solution found.\n"
                      return False
             path -> do putStr "Solution found: "
                        print path
+                       end <- getCPUTime
+                       let diff = (fromIntegral (end - start)) / (10^12)
+                       printf "Computation time: %0.3f sec\n" (diff :: Double)
                        return True
     else do putStr "Invalid Cube Configuration. Please try again.\n"
             return False
