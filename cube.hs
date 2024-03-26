@@ -17,13 +17,10 @@ import Corner
 import Constants
 import Prelude 
 import Debug.Trace
-<<<<<<< Updated upstream
-=======
 import qualified Data.Set as Set 
 import qualified Data.Map as Map
 
 type Result = (Bool, [String], Map.Map String Int, String)
->>>>>>> Stashed changes
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
@@ -31,12 +28,6 @@ check_initial_cube :: Cube -> Bool
 get_corner :: Cube -> Int -> Corner
 is_solved :: Cube -> Bool
 is_side_solved :: Cube -> [Int] -> Int -> Bool
-<<<<<<< Updated upstream
-solve_outer_cube :: Cube -> [String]
-solve_cube :: Cube -> Int -> Int -> String -> [String] -> (Bool, [String])
-try_moves :: Cube -> Int -> Int -> String -> [String] -> [String] -> (Bool, [String])
-=======
->>>>>>> Stashed changes
 move :: Cube -> Int -> Int -> [Int] -> Cube
 apply_move :: Cube -> String -> Cube
 prune_moves :: String -> [String]
@@ -62,29 +53,6 @@ is_side_solved (Cube corners) indices color_index =
     let cube_colors = map (\index -> (get_colors (get_corner (Cube corners) index)) !! color_index) indices
     in all (== head cube_colors) cube_colors
 
-<<<<<<< Updated upstream
-solve_outer_cube cube = solveAtDepth 1 where
-    solveAtDepth :: Int -> [String]
-    solveAtDepth depth
-      | depth > max_depth_limit = []
-      | otherwise =
-          case trace ("Depth: " ++ show depth) $ solve_cube cube 0 depth "" [] of
-            (True, path) -> path
-            (False, _) -> solveAtDepth (depth + 1)
-
-solve_cube cube curr_depth max_depth lastMove path
-    | is_solved cube = (True, path)
-    | curr_depth >= max_depth = (False, [])
-    | otherwise = try_moves cube curr_depth max_depth lastMove path (prune_moves lastMove)
-        
-try_moves _ _ _ _ _ [] = (False, []) -- No more moves to try
-try_moves cube curr_depth max_depth last_move path (curr_move:moves) = do 
-    let new_cube = apply_move cube curr_move
-    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (path ++ [curr_move])
-    case result of
-        (True, _) -> result
-        (False, _) -> try_moves cube curr_depth max_depth last_move path moves
-=======
 solve_outer_cube :: Cube -> Cube -> [String]
 solve_outer_cube cube final_cube = solve_at_depth 1 where 
     solve_at_depth :: Int -> [String]
@@ -150,7 +118,6 @@ try_moves_3 cube curr_depth max_depth last_move current_key key path (curr_move:
     case result of 
         (True, _, _, _) -> result
         (False, _, new_memo, _) -> try_moves_3 cube curr_depth max_depth last_move current_key key path moves new_memo
->>>>>>> Stashed changes
 
 move (Cube corners) a b indices_to_swap =
     let temp = swap1 a b (corners !! (indices_to_swap !! 0))
@@ -189,9 +156,6 @@ prune_moves m
     | m == fcc = fcc_moves
     | m == bc = bc_moves
     | m == bcc = bcc_moves
-<<<<<<< Updated upstream
-    | otherwise = all_moves
-=======
     | otherwise = all_moves
 
 convert_moves [] = []
@@ -222,4 +186,3 @@ corner_dissection key_dict position key (c:cs) =
     case Map.lookup c key_dict of 
         Just value -> corner_dissection key_dict position (show value ++ key) cs
         Nothing -> corner_dissection (Map.insert c position key_dict) (position + 1) (show position ++ key) cs
->>>>>>> Stashed changes
