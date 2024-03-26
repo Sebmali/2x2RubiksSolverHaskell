@@ -5,6 +5,14 @@ import Corner
 import Cube
 import System.IO
 import Data.Type.Equality (apply)
+<<<<<<< Updated upstream
+=======
+import Constants
+import qualified Data.Set as Set 
+import Debug.Trace
+import System.CPUTime
+import Text.Printf
+>>>>>>> Stashed changes
 
 main :: IO ()
 main = do 
@@ -25,14 +33,22 @@ get_file = do
     print corners 
     let resultCube = create_corners corners empty_cube
     print resultCube
+<<<<<<< Updated upstream
     print "Done!"
+=======
+    print finalCube -- for bidirectional search
+>>>>>>> Stashed changes
     hClose fileHandle
+    start <- getCPUTime
     if check_initial_cube resultCube then 
-        case solve_outer_cube resultCube of 
+        case solve_outer_cube resultCube finalCube of 
             [] -> do putStr "No solution found.\n"
                      return False
             path -> do putStr "Solution found: "
                        print path
+                       end <- getCPUTime
+                       let diff = (fromIntegral (end - start)) / (10^12)
+                       printf "Computation time: %0.3f sec\n" (diff :: Double)
                        return True
     else do putStr "Invalid Cube Configuration. Please try again.\n"
             return False
