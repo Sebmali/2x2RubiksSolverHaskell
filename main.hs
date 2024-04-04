@@ -3,6 +3,11 @@
 {-# HLINT ignore "Eta reduce" #-}
 import Corner 
 import Cube
+    ( Cube,
+      empty_cube,
+      add_corner,
+      check_initial_cube,
+      solve_outer_cube )
 import System.IO
 import Constants
 import qualified Data.Set as Set 
@@ -25,6 +30,7 @@ get_file = do
     fileHandle <- openFile input ReadMode
     contents <- hGetContents fileHandle 
     let corners = lines contents
+    --hFlush stdout
     print corners 
     let resultCube = create_corners corners empty_cube
     let finalCube = create_corners solved_cube empty_cube

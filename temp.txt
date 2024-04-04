@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 O W G 
 R Y B 
 Y G R 
@@ -6,3 +7,13 @@ W B O
 O Y B 
 W G R 
 B R W
+=======
+R G W
+W O G
+Y B O
+O W B
+Y B R
+G R Y
+Y G O
+W B R
+>>>>>>> Stashed changes

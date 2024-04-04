@@ -3,7 +3,7 @@ module Constants where
 import qualified Data.Map as Map 
 
 data Cube = Cube [Corner] deriving (Show)
-data Corner = Corner [Char] deriving (Show)
+data Corner = Corner [Char] deriving (Show, Eq)
 type Result = (Bool, [String], Map.Map String Int, String)
 type Depth = Int 
 type Solution = [String]
@@ -90,15 +90,15 @@ right = [0, 3, 4, 7]
 left = [1, 2, 5, 6]
 
 --All possible corner orientations to check for correct initial cube
-initial_possibilities :: [Colors]
-initial_possibilities = [['W','O','B'], ['W','B','O'], ['O','W','B'], ['O','B','W'], ['B','W','O'], ['B','O','W'],
-                         ['W','O','G'], ['W','G','O'], ['O','W','G'], ['O','G','W'], ['G','W','O'], ['G','O','W'],
-                         ['W','R','G'], ['W','G','R'], ['R','W','G'], ['R','G','W'], ['G','W','R'], ['G','R','W'],
-                         ['W','R','B'], ['W','B','R'], ['R','W','B'], ['R','B','W'], ['B','W','R'], ['B','R','W'],
-                         ['Y','O','B'], ['Y','B','O'], ['O','Y','B'], ['O','B','Y'], ['B','Y','O'], ['B','O','Y'],
-                         ['Y','O','G'], ['Y','G','O'], ['O','Y','G'], ['O','G','Y'], ['G','Y','O'], ['G','O','Y'],
-                         ['Y','R','G'], ['Y','G','R'], ['R','Y','G'], ['R','G','Y'], ['G','Y','R'], ['G','R','Y'],
-                         ['Y','R','B'], ['Y','B','R'], ['R','Y','B'], ['R','B','Y'], ['B','Y','R'], ['B','R','Y']]
+initial_possibilities :: [Corner]
+initial_possibilities = [Corner['W','O','B'], Corner['W','B','O'], Corner['O','W','B'], Corner['O','B','W'], Corner['B','W','O'], Corner['B','O','W'],
+                         Corner['W','O','G'], Corner['W','G','O'], Corner['O','W','G'], Corner['O','G','W'], Corner['G','W','O'], Corner['G','O','W'],
+                         Corner['W','R','G'], Corner['W','G','R'], Corner['R','W','G'], Corner['R','G','W'], Corner['G','W','R'], Corner['G','R','W'],
+                         Corner['W','R','B'], Corner['W','B','R'], Corner['R','W','B'], Corner['R','B','W'], Corner['B','W','R'], Corner['B','R','W'],
+                         Corner['Y','O','B'], Corner['Y','B','O'], Corner['O','Y','B'], Corner['O','B','Y'], Corner['B','Y','O'], Corner['B','O','Y'],
+                         Corner['Y','O','G'], Corner['Y','G','O'], Corner['O','Y','G'], Corner['O','G','Y'], Corner['G','Y','O'], Corner['G','O','Y'],
+                         Corner['Y','R','G'], Corner['Y','G','R'], Corner['R','Y','G'], Corner['R','G','Y'], Corner['G','Y','R'], Corner['G','R','Y'],
+                         Corner['Y','R','B'], Corner['Y','B','R'], Corner['R','Y','B'], Corner['R','B','Y'], Corner['B','Y','R'], Corner['B','R','Y']]
 
 pruned_move_map :: Map.Map Move Moves
 pruned_move_map = Map.fromList [
@@ -131,4 +131,3 @@ convert_move_map = Map.fromList [
     (bc, bcc),
     (bcc, bc)
     ]
-

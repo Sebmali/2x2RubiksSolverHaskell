@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 module Cube
 (
     Cube,
@@ -10,17 +12,16 @@ module Cube
 import Corner
 import Constants
 import qualified Data.Map as Map
+import Data.ByteString (count)
 
 empty_cube :: Cube
 add_corner :: Corner -> Cube -> Cube
 check_initial_cube :: Cube -> Bool
 solve_outer_cube :: Cube -> Cube -> Solution
 solve_cube :: Cube -> Depth -> Depth -> Move -> Path -> Memo -> Result
-try_moves :: Cube -> Depth -> Depth -> Move -> Path -> Moves -> Memo -> Result
+try_moves :: Cube -> Depth -> Depth -> Move -> Path -> Moves -> Memo -> Memo -> Key -> Int -> Result
 mess_cube :: Cube -> Depth -> Depth -> Move -> Path -> Memo -> Memo -> Result
-try_moves_2 :: Cube -> Depth -> Depth -> Move -> Path -> Moves -> Memo -> Memo -> Result
 find_connecting_path :: Cube -> Depth -> Depth -> Move -> Key -> Path -> Memo -> Memo -> Result
-try_moves_3 :: Cube -> Depth -> Depth -> Move -> Key -> Path -> Moves -> Memo -> Memo -> Result
 update_memo :: Key -> Memo -> Depth -> Memo
 move :: Cube -> Int -> Int -> [Int] -> Cube
 apply_move :: Cube -> Move -> Cube
@@ -35,7 +36,20 @@ empty_cube = Cube []
 
 add_corner corner (Cube corners) = Cube (corner:corners)
 
-check_initial_cube (Cube corners) = length corners == 8
+check_initial_cube (Cube corners) = check_initial_cube_helper (Cube corners) 0 && appears_four_times (Cube corners) where
+    check_initial_cube_helper :: Cube -> Int -> Bool
+    check_initial_cube_helper _ 8 = True
+    check_initial_cube_helper (Cube corners) index = if (corners !! index) `elem` initial_possibilities then check_initial_cube_helper (Cube corners) (index + 1) else False
+appears_four_times :: Cube -> Bool
+appears_four_times (Cube corners) = appears_four_times_helper (Cube corners) 0 where
+    appears_four_times_helper :: Cube -> Int -> Bool
+    appears_four_times_helper _ 4 = True
+    appears_four_times_helper (Cube corners) index = if (count_occurrences (corners !! index) (Cube corners) 0) == 4 then appears_four_times_helper (Cube corners) (index + 1) else False
+count_occurrences :: Corner -> Cube -> Int -> Int
+count_occurrences corner (Cube corners) index = count_occurrences_helper corner (Cube corners) index 0 where
+    count_occurrences_helper :: Corner -> Cube -> Int -> Int -> Int
+    count_occurrences_helper _ _ 8 count = count
+    count_occurrences_helper corner (Cube corners) index count = if corner == (corners !! index) then count_occurrences_helper corner (Cube corners) (index + 1) (count + 1) else count_occurrences_helper corner (Cube corners) (index + 1) count
 
 solve_outer_cube cube final_cube = solve_at_depth 1 where 
     solve_at_depth :: Depth -> Solution
@@ -55,49 +69,39 @@ solve_outer_cube cube final_cube = solve_at_depth 1 where
 solve_cube cube curr_depth max_depth last_move path memo 
     | curr_depth >= max_depth = (False, [], memo, "")
     | Map.lookup cube_key memo == Just curr_depth = (False, [], memo, "")
-    | otherwise = try_moves cube curr_depth max_depth last_move path (prune_moves last_move) new_memo
+    | otherwise = try_moves cube curr_depth max_depth last_move path (prune_moves last_move) new_memo Map.empty "" 1
     where cube_key = cube_state_to_key cube
           new_memo = update_memo cube_key memo curr_depth
 
-try_moves _ _ _ _ _ [] memo = (False, [], memo, "")
-try_moves cube curr_depth max_depth last_move path (curr_move:moves) memo = do
+
+try_moves _ _ _ _ _ [] memo _ _ _ = (False, [], memo, "")
+try_moves cube curr_depth max_depth last_move path (curr_move:moves) memo curr_memo key choice = do
     let new_cube = apply_move cube curr_move
-    let result = solve_cube new_cube (curr_depth + 1) max_depth curr_move (curr_move:path) memo
+    let result = if choice == 1
+                    then solve_cube new_cube (curr_depth + 1) max_depth last_move (curr_move:path) memo
+                    else if choice == 2 then mess_cube new_cube (curr_depth + 1) max_depth last_move (curr_move:path) memo curr_memo
+                    else find_connecting_path new_cube (curr_depth + 1) max_depth curr_move key (path ++ [curr_move]) memo curr_memo
     case result of 
         (True, _, _, _) -> result
-        (False, _, next_memo, _) -> try_moves cube curr_depth max_depth last_move path moves next_memo
+        (False, _, next_memo, _) -> try_moves cube curr_depth max_depth last_move path moves next_memo curr_memo key choice
 
 mess_cube cube curr_depth max_depth last_move path memo curr_memo
     | curr_depth >= max_depth = (False, [], memo, "")
     | Map.member cube_key memo = (True, path, memo, cube_key)
     | Map.lookup cube_key curr_memo == Just curr_depth = (False, [], memo, "")
-    | otherwise = try_moves_2 cube curr_depth max_depth last_move path (prune_moves last_move) memo new_memo
+    | otherwise = try_moves cube curr_depth max_depth last_move path (prune_moves last_move) memo new_memo "" 2
     where cube_key = cube_state_to_key cube
           new_memo = update_memo cube_key curr_memo curr_depth
 
-try_moves_2 _ _ _ _ _ [] memo _ = (False, [], memo, "")
-try_moves_2 cube curr_depth max_depth last_move path (curr_move:moves) memo curr_memo = do
-    let new_cube = apply_move cube curr_move
-    let result = mess_cube new_cube (curr_depth + 1) max_depth curr_move (curr_move:path) memo curr_memo
-    case result of 
-        (True, _, _, _) -> result
-        (False, _, new_memo, _) -> try_moves_2 cube curr_depth max_depth last_move path moves new_memo curr_memo
 
 find_connecting_path cube curr_depth max_depth last_move key path memo curr_memo 
     | curr_depth >= max_depth = (False, [], memo, "")
     | current_key == key = (True, path, memo, current_key)
     | Map.lookup current_key curr_memo == Just curr_depth = (False, [], memo, "")
-    | otherwise = try_moves_3 cube curr_depth max_depth last_move key path (prune_moves last_move) memo new_memo
+    | otherwise = try_moves cube curr_depth max_depth last_move path (prune_moves last_move) memo new_memo key 3
     where current_key = cube_state_to_key cube
           new_memo = update_memo current_key curr_memo curr_depth
 
-try_moves_3 _ _ _ _ _ _ [] memo _ = (False, [], memo, "")
-try_moves_3 cube curr_depth max_depth last_move key path (curr_move:moves) memo curr_memo = do
-    let new_cube = apply_move cube curr_move
-    let result = find_connecting_path new_cube (curr_depth + 1) max_depth curr_move key (path ++ [curr_move]) memo curr_memo
-    case result of 
-        (True, _, _, _) -> result
-        (False, _, new_memo, _) -> try_moves_3 cube curr_depth max_depth last_move key path moves new_memo curr_memo
 
 update_memo key memo curr_depth = 
     case Map.lookup key memo of 
