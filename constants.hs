@@ -1,13 +1,30 @@
 module Constants where 
 
+import qualified Data.Map as Map 
+
+data Cube = Cube [Corner] deriving (Show)
+data Corner = Corner [Char] deriving (Show)
+type Result = (Bool, [String], Map.Map String Int, String)
+type Depth = Int 
+type Solution = [String]
+type Path = [String]
+type Memo = Map.Map String Int
+type Move = String
+type Moves = [String]
+type Key = String 
+type Color = Char
+type Colors = [Char]
+
+colors:: Colors
+colors = "RGBYOW"
 max_depth_limit :: Int 
 max_depth_limit = 14
 poss_corners :: [String]
 poss_corners = ["Front-Right-Top", "Front-Left-Top", "Back-Left-Top", "Back-Right-Top", 
                "Front-Right-Bottom", "Front-Left-Bottom", "Back-Left-Bottom", "Back-Right-Bottom"]
-poss_colors :: [Char]
+poss_colors :: Colors
 poss_colors = ['W', 'G', 'R', 'B', 'O', 'Y']
-rvu, rvd, lvu, lvd, thr, thl, bhr, bhl, fc, fcc, bc, bcc :: String
+rvu, rvd, lvu, lvd, thr, thl, bhr, bhl, fc, fcc, bc, bcc :: Move
 rvu = "right_vertical_up"
 rvd = "right_vertical_down"
 lvu = "left_vertical_up"
@@ -73,7 +90,7 @@ right = [0, 3, 4, 7]
 left = [1, 2, 5, 6]
 
 --All possible corner orientations to check for correct initial cube
-initial_possibilities :: [[Char]]
+initial_possibilities :: [Colors]
 initial_possibilities = [['W','O','B'], ['W','B','O'], ['O','W','B'], ['O','B','W'], ['B','W','O'], ['B','O','W'],
                          ['W','O','G'], ['W','G','O'], ['O','W','G'], ['O','G','W'], ['G','W','O'], ['G','O','W'],
                          ['W','R','G'], ['W','G','R'], ['R','W','G'], ['R','G','W'], ['G','W','R'], ['G','R','W'],
@@ -82,4 +99,36 @@ initial_possibilities = [['W','O','B'], ['W','B','O'], ['O','W','B'], ['O','B','
                          ['Y','O','G'], ['Y','G','O'], ['O','Y','G'], ['O','G','Y'], ['G','Y','O'], ['G','O','Y'],
                          ['Y','R','G'], ['Y','G','R'], ['R','Y','G'], ['R','G','Y'], ['G','Y','R'], ['G','R','Y'],
                          ['Y','R','B'], ['Y','B','R'], ['R','Y','B'], ['R','B','Y'], ['B','Y','R'], ['B','R','Y']]
+
+pruned_move_map :: Map.Map Move Moves
+pruned_move_map = Map.fromList [
+    (rvu, rvu_moves),
+    (rvd, rvd_moves),
+    (lvu, lvu_moves),
+    (lvd, lvd_moves),
+    (thr, thr_moves),
+    (thl, thl_moves),
+    (bhr, bhr_moves),
+    (bhl, bhl_moves),
+    (fc, fc_moves),
+    (fcc, fcc_moves),
+    (bc, bc_moves),
+    (bcc, bcc_moves)
+    ]
+
+convert_move_map :: Map.Map Move Move
+convert_move_map = Map.fromList [
+    (rvu, rvd),
+    (rvd, rvu),
+    (lvu, lvd),
+    (lvd, lvu),
+    (thr, thl),
+    (thl, thr),
+    (bhr, bhl),
+    (bhl, bhr),
+    (fc, fcc),
+    (fcc, fc),
+    (bc, bcc),
+    (bcc, bc)
+    ]
 
