@@ -4,10 +4,8 @@
 import Corner 
 import Cube
 import System.IO
-import Data.Type.Equality (apply)
 import Constants
 import qualified Data.Set as Set 
-import Debug.Trace
 import System.CPUTime
 import Text.Printf
 
@@ -29,9 +27,7 @@ get_file = do
     let corners = lines contents
     print corners 
     let resultCube = create_corners corners empty_cube
-    let finalCube = create_corners solved_cube empty_cube -- for bidirectional search
-    print resultCube
-    print finalCube -- for bidirectional search
+    let finalCube = create_corners solved_cube empty_cube
     hClose fileHandle
     start <- getCPUTime
     if check_initial_cube resultCube then 
@@ -56,7 +52,6 @@ get_corners = do
     let corners = []
     inputs <- get_input 0 []  
     let resultCube = create_corners inputs empty_cube
-    print resultCube
     if check_initial_cube resultCube then return True 
     else do putStr "Invalid Cube Configuration. Please try again.\n"
             return False 
@@ -66,7 +61,6 @@ get_input i  xs | i == 8 = return xs
                 | otherwise = do 
                     putStr "Enter the colors of the corner: "
                     input <- getLine
-                    --let colors = lines input
                     let newXs = xs ++ [colors]
                     print newXs
                     get_input (i + 1) newXs
@@ -79,5 +73,5 @@ create_corners_helper [] cube = cube
 create_corners_helper (x:xs) cube = do 
     let colors = words x 
     let corner = new_corner colors 
-    if is_valid corner then create_corners_helper xs (add_corner corner cube)
+    if is_valid_corner corner then create_corners_helper xs (add_corner corner cube)
     else error "Invalid Cube Configuration. Please try again.\n"
