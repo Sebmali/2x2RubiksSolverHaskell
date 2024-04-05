@@ -1,19 +1,7 @@
 module Constants where 
 
 import qualified Data.Map as Map 
-
-data Cube = Cube [Corner] deriving (Show)
-data Corner = Corner [Char] deriving (Show, Eq)
-type Result = (Bool, [String], Map.Map String Int, String)
-type Depth = Int 
-type Solution = [String]
-type Path = [String]
-type Memo = Map.Map String Int
-type Move = String
-type Moves = [String]
-type Key = String 
-type Color = Char
-type Colors = [Char]
+import Data_Types
 
 colors:: Colors
 colors = "RGBYOW"
@@ -100,6 +88,7 @@ initial_possibilities = [Corner['W','O','B'], Corner['W','B','O'], Corner['O','W
                          Corner['Y','R','G'], Corner['Y','G','R'], Corner['R','Y','G'], Corner['R','G','Y'], Corner['G','Y','R'], Corner['G','R','Y'],
                          Corner['Y','R','B'], Corner['Y','B','R'], Corner['R','Y','B'], Corner['R','B','Y'], Corner['B','Y','R'], Corner['B','R','Y']]
 
+--All the possible pruned moves that are possible for a given move.
 pruned_move_map :: Map.Map Move Moves
 pruned_move_map = Map.fromList [
     (rvu, rvu_moves),
@@ -116,6 +105,7 @@ pruned_move_map = Map.fromList [
     (bcc, bcc_moves)
     ]
 
+--Map of all conversions for a given move, i.e., the opposite move. (RVU -> RVD)
 convert_move_map :: Map.Map Move Move
 convert_move_map = Map.fromList [
     (rvu, rvd),

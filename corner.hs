@@ -1,3 +1,9 @@
+{-
+Corner.py
+Purpose: This file contains the Corner class which is used to represent the corners
+of the Rubiks Cube. This class is used to represent the colors of the corner as well. 
+Authors: Sebastian Maliczewski, Shayne Prakash
+-}
 module Corner
 (
     Corner,
@@ -10,6 +16,7 @@ module Corner
 where
 
 import Constants
+import Data_Types
 
 new_corner :: [String] -> Corner
 is_valid_corner :: Corner -> Bool
