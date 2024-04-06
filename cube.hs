@@ -47,17 +47,13 @@ check_initial_cube (Cube corners) = check_initial_cube_helper (Cube corners) 0 w
     check_initial_cube_helper :: Cube -> Int -> Bool
     check_initial_cube_helper _ 8 = True
     check_initial_cube_helper (Cube corners) index = if (corners !! index) `elem` initial_possibilities then check_initial_cube_helper (Cube corners) (index + 1) else False
-{-appears_four_times :: Cube -> Bool
-appears_four_times (Cube corners) = appears_four_times_helper (Cube corners) 0 where
-    appears_four_times_helper :: Cube -> Int -> Bool
-    appears_four_times_helper _ 4 = True
-    appears_four_times_helper (Cube corners) index = if (count_occurrences (corners !! index) (Cube corners) 0) == 4 then appears_four_times_helper (Cube corners) (index + 1) else False
--}
+
 count_occurrences :: Corner -> Cube -> Int -> Int
 count_occurrences corner (Cube corners) index = count_occurrences_helper corner (Cube corners) index 0 where
     count_occurrences_helper :: Corner -> Cube -> Int -> Int -> Int
     count_occurrences_helper _ _ 8 count = count
     count_occurrences_helper corner (Cube corners) index count = if corner == (corners !! index) then count_occurrences_helper corner (Cube corners) (index + 1) (count + 1) else count_occurrences_helper corner (Cube corners) (index + 1) count
+
 {-
 This function handles the solving of the cube. It solves it using a depth first search algorithm
 and starts at the unsolved cube and tries to solve it while also starting from the final cube
